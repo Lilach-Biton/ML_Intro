@@ -48,9 +48,10 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
         norm = np.linalg.norm(w)
 
         # TODO: complete the loss calculation
-        loss = 0.0
+        max_term = np.maximum(0, 1 - hinge_inputs)
+        loss = C * np.sum(max_term) + norm ** 2
 
-        return
+        return loss
 
     @staticmethod
     def subgradient(w, b: float, C: float, X, y):
@@ -67,6 +68,16 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
         # TODO: calculate the analytical sub-gradient of soft-SVM w.r.t w and b
         g_w = None
         g_b = 0.0
+
+        margins = (X.dot(w) + b).reshape(-1, 1)
+        hinge_inputs = np.multiply(margins, y.reshape(-1, 1))
+
+        max_term = np.maximum(0, 1 - hinge_inputs)
+        f_hinge = np.sign(-max_term)
+        f_hinge = np.multiply(f_hinge, y.reshape(-1, 1))
+        f_deriv = np.multiply(f_hinge, X)
+        g_w = C * np.sum(f_deriv, axis=0) + 2 * w
+        g_b = C * np.sum(f_hinge)
 
         return g_w, g_b
 
@@ -102,12 +113,12 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
             batch_y = y[start_idx:end_idx]
 
             # TODO: Compute the (sub)gradient of the current *batch*
-            g_w, g_b = None, None
+            g_w, g_b = self.subgradient(self.w, self.b, self.C, batch_X, batch_y)
 
             # Perform a (sub)gradient step
             # TODO: update the learned parameters correctly
-            self.w = None
-            self.b = 0.0
+            self.w = self.w - self.lr * g_w
+            self.b = self.b - self.lr * g_b
 
             if keep_losses:
                 losses.append(self.loss(self.w, self.b, self.C, X, y))
@@ -137,6 +148,6 @@ class SoftSVM(BaseEstimator, ClassifierMixin):
                  NOTE: the labels must be either +1 or -1
         """
         # TODO: compute the predicted labels (+1 or -1)
-        y_pred = None
+        y_pred = np.sign(X.dot(self.w) + self.b)
 
         return y_pred
