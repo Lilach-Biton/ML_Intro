@@ -27,8 +27,8 @@ def prepare_data(training_data, new_data):
     new_data_prepared[['PCR_02','PCR_05','PCR_07','PCR_09','PCR_10']] = scaler_standart.transform(temp_df_new_standart)
 
     # add new features
-    df_bool = pd.DataFrame({'SpecialProperty' : training_data["blood_type"].isin(["O+", "B+"])})
-    new_data_prepared = pd.concat([new_data_prepared, df_bool], axis=1)
+    df_bool = pd.DataFrame({'SpecialProperty' : new_data_prepared["blood_type"].isin(["O+", "B+"])})
+    new_data_prepared = pd.concat([new_data_prepared.reset_index(drop=True), df_bool.reset_index(drop=True)], axis=1)
     new_data_prepared.drop(columns=['blood_type'], inplace=True)
 
     return new_data_prepared
