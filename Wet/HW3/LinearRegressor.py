@@ -42,6 +42,9 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         # TODO: complete the loss calculation
         loss = None
+        m = X.shape[0]
+        b_vec = np.ones((m,))*b
+        loss = 1/m * np.linalg.norm((X.dot(w) + b_vec)-y)**2
 
         return loss
 
@@ -59,6 +62,12 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         # TODO: calculate the analytical gradient w.r.t w and b
         g_w = None
         g_b = 0.0
+
+        m = X.shape[0]
+        b_vec = np.ones((m,))*b
+
+        g_w = 2/m * (X.T).dot((X).dot(w) + b_vec - y)
+        g_b = 2/m * (np.ones((m,)).T).dot((X).dot(w) + b_vec - y)
 
         return g_w, g_b
 
@@ -93,12 +102,12 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
             batch_y = y[start_idx: end_idx]
 
             # TODO: Compute the gradient for the current *batch*
-            g_w, g_b = None, None
+            g_w, g_b = self.gradient(self.w, self.b, batch_X, batch_y)
 
             # Perform a gradient step
             # TODO: update the learned parameters correctly
-            self.w = None
-            self.b = 0.0
+            self.w = self.w - self.lr * g_w
+            self.b = self.b - self.lr * g_b
 
             if keep_losses:
                 train_losses.append(self.loss(self.w, self.b,  X, y))
@@ -128,6 +137,6 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         """
 
         # TODO: Compute
-        y_pred = None
+        y_pred = X.dot(self.w) + self.b
 
         return y_pred
